@@ -22,7 +22,13 @@
         <div class="row g-2 align-items-end">
           <div class="col-md-4">
             <label class="form-label">Load File JSON</label>
-            <input id="fileInput" type="file" accept="application/json,.json" class="form-control" />
+              <div class="input-group">
+                <label class="btn btn-primary mb-0">
+                  <i class="bi bi-upload"></i> Choose JSON
+                  <input id="fileInput" type="file" accept="application/json,.json" class="d-none">
+                </label>
+                <input id="fileName" class="form-control" type="text" placeholder="No file selected" readonly>
+              </div>
           </div>
           <div class="col-md-8 d-flex flex-wrap gap-2">
             <button id="btnAddGroup" class="btn btn-primary" disabled>
@@ -160,7 +166,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Emails to DELETE (one per line or separated by commas)</label>
-            <textarea id="editRemoveEmails" rows="4" class="form-control" placeholder="borrar1@example.com, borrar2@example.org"></textarea>
+            <textarea id="editRemoveEmails" rows="4" class="form-control" placeholder="userToDelete1@example.com, userToDelete12@example.org"></textarea>
           </div>
           <div class="form-check mb-2">
             <input class="form-check-input" type="checkbox" id="editOptAllowed" checked>
@@ -551,6 +557,12 @@
     // ----------------- Events -----------------
     el('fileInput').addEventListener('change', e => {
       const f = e.target.files && e.target.files[0];
+
+      const fileName = document.getElementById('fileName');
+        if (fileName) {
+          fileName.value = f ? f.name : 'No file selected';
+        }      
+      
       if(!f) return;
       loadedFileName = f.name || "users.json";
       const reader = new FileReader();

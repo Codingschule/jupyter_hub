@@ -9,6 +9,7 @@ PRUNE = os.getenv("USERSYNC_PRUNE", "false").lower() == "true"
 
 HDRS = {"Authorization": f"token {API_TOKEN}", "Content-Type": "application/json"}
 
+# Handles authentication and JSON serialization.
 def api(method, path, payload=None):
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(API_URL + path, data=data, method=method, headers=HDRS)
@@ -22,13 +23,13 @@ def api(method, path, payload=None):
     except Exception as e:
         return None, str(e)
 
+# Parse users.json supporting both dict and legacy list forms
 def load_desired():
     with open(USERS_FILE, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
     desired_users = {}  
     desired_groups = {} 
-
 
     if isinstance(raw, list):
         for u in raw:
@@ -61,6 +62,7 @@ def load_desired():
 
     return desired_users, desired_groups
 
+# Snapshot current Hub users/groups to compute diffs
 def get_current():
     code, users = api("GET", "/users")
     if code != 200 or not isinstance(users, list):
@@ -74,6 +76,7 @@ def get_current():
     return cur_users, cur_groups
 
 
+# Idempotent create/patch for users; updates admin flag if needed
 def ensure_user(name: str, admin: bool):
 
     uname = name.strip()
@@ -97,11 +100,13 @@ def ensure_user(name: str, admin: bool):
         if code2 not in (200, 204, 404):
             raise RuntimeError(f"PATCH {path} -> {code2}")
 
+# Idempotent group creation
 def ensure_group(name):
     code, _ = api("POST", "/groups", {"groups": [name]})
     if code not in (201, 409):
         raise RuntimeError(f"POST /groups {name} -> {code}")        
 
+# Adds missing users to a group
 def add_members(group, users):
     if not users:
         return
@@ -109,12 +114,14 @@ def add_members(group, users):
     if code not in (200, 201, 204):
         raise RuntimeError(f"POST /groups/{group}/users -> {code}")
 
+# Removes specific users from a group
 def remove_members(group, users):
     for u in users:
         code, _ = api("DELETE", f"/groups/{urllib.parse.quote(group)}/users/{urllib.parse.quote(u)}")
         if code not in (200, 204):
             pass  
 
+# Always converges Hub state toward the JSON file
 def reconcile():
     desired_users, desired_groups = load_desired()
     cur_users, cur_groups = get_current()
@@ -135,6 +142,7 @@ def reconcile():
             extra = have - want_members
             remove_members(g, extra)
 
+# SHA-1 based change detection on the users file; reconciles on change.
 def watch():
     last_sig = None
     while True:

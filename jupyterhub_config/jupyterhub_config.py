@@ -12,6 +12,7 @@ users_file = os.getenv("USERS_FILE", "/srv/jupyterhub/users.json")
 sync_interval = int(os.getenv("USERSYNC_INTERVAL", "10"))
 prune = os.getenv("USERSYNC_PRUNE", "false")
 
+# Run a managed Hub service that reconciles users/groups from users.json
 c.JupyterHub.services = [
     {
         "name": "usersync",
@@ -54,13 +55,14 @@ c.JupyterHub.db_url = f'postgresql+psycopg://{db_user}:{db_pass}@{db_host}:{db_p
 apply_spawner(c)
 
 c.JupyterHub.log_level = "INFO"
-c.JupyterHub.tornado_settings = {"slow_spawn_timeout": 60} 
 
-c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/secret/jupyterhub_cookie_secret"
 # for the users security: keep secret outside git repo, never expose this file
+c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/secret/jupyterhub_cookie_secret"
 
+# Adjusts UI timeout threshold for slow container spawns.
 c.JupyterHub.tornado_settings = {
     "slow_spawn_timeout": 60,
 }
+
 
 

@@ -34,11 +34,15 @@ def configure_users_and_roles(c):
             print(f"[bootstrap] can't create flag {BOOTSTRAP_FLAG}: {e}")
 
     env_open = os.environ.get("JUPYTERHUB_OPEN_SIGNUP", "false").lower() == "true"
-
-    c.NativeAuthenticator.open_signup  = env_open or first_bootstrap
+    
     # for the users security: only allow signup on first boot unless explicitly enabled
+    c.NativeAuthenticator.open_signup  = env_open or first_bootstrap
+    
     c.Authenticator.admin_users = set(admin_users)
-    base_allowed = set(allowed_users_env) #  if allowed_users_env else set(admin_users + subadmin_users)
+
+    # if allowed_users_env else set(admin_users + subadmin_users)
+    base_allowed = set(allowed_users_env) 
+    
 
     if base_allowed:
       c.Authenticator.allowed_users = base_allowed | set(admin_users)
@@ -54,9 +58,11 @@ def configure_users_and_roles(c):
 
     c.JupyterHub.load_roles = roles
     
+    # Convenience groups for admins/subadmins
     c.JupyterHub.load_groups = {
         "admins": {"users": admin_users},
         "subadmins": {"users": subadmin_users},
     }
+    
 
 

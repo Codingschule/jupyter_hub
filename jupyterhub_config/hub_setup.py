@@ -1,5 +1,6 @@
 import os
 
+# Source DB connection pieces from environment
 def get_db_env():
     return (
         os.environ['POSTGRES_DB'],

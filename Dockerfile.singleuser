@@ -1,15 +1,40 @@
+
 FROM jupyter/datascience-notebook:latest
 
-# Install jupyterhub (need to start-singleuser.sh) and packets conda/manba ...
+# bash as shell for RUN, CMD, ENTRYPOINT, ENV and SHELL instructions 
+SHELL ["/bin/bash", "-lc"]
+
+# install packages as root
 USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git tini \
+ && rm -rf /var/lib/apt/lists/*
+
+# installs mamba  
 RUN mamba install -y -n base -c conda-forge \
       jupyterhub=5.1.0 \
       dask dask-gateway \
       pyarrow fastparquet s3fs \
-  && mamba clean -afy \
-  && fix-permissions "${CONDA_DIR}" \
-  && fix-permissions "/home/${NB_USER}" \
-  && rm -rf /tmp/*
+      nbgitpuller git pyyaml watchfiles pytest flake8 \
+  && mamba clean -afy
 
-# come back to user 
-USER ${NB_USER}
+# python and python3  
+RUN ln -sf /opt/conda/bin/python3 /usr/local/bin/python3 \
+ && ln -sf /opt/conda/bin/python   /usr/local/bin/python || true
+
+# create and give permissions to NB_USER for /home/jovyan/work/.runner 
+ENV NB_USER=jovyan
+ENV NB_UID=1000
+ENV NB_GID=100
+RUN mkdir -p /home/${NB_USER}/work/.runner \
+ && chown -R ${NB_UID}:${NB_GID} /home/${NB_USER} \
+ && fix-permissions "${CONDA_DIR}" \
+ && fix-permissions "/home/${NB_USER}"
+
+# scripts 
+COPY jupyterhub_config/start-singleuser.sh /usr/local/bin/start-singleuser.sh
+COPY jupyterhub_config/jhub_runner.py      /usr/local/bin/jhub_runner.py
+RUN chmod +x /usr/local/bin/start-singleuser.sh
+
+# user  
+USER ${NB_UID}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PW="${EDIT_LOGIN_PASSWORD:-}"                   
+PW="${EDIT_LOGIN_PASSWORD}"                   
 TARGET="${EDIT_TARGET_URL:-/hub/static/editUser.html}"
 
 # Where Hub serves the static editor

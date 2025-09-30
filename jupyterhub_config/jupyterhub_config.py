@@ -1,6 +1,7 @@
 # type: ignore
 import os
 
+from traitlets.config import Config
 from user_mgmt import configure_users_and_roles
 from hub_setup import get_db_env
 from auth_setup import apply_auth
@@ -8,9 +9,9 @@ from spawner_setup import apply_spawner
 
 c = get_config()  # type: ignore
 
-users_file = os.getenv("USERS_FILE", "/srv/jupyterhub/users.json")
-sync_interval = int(os.getenv("USERSYNC_INTERVAL", "10"))
-prune = os.getenv("USERSYNC_PRUNE", "false")
+users_file = os.environ["USERS_FILE"]
+sync_interval = int(os.environ["USERSYNC_INTERVAL"])
+prune = os.environ["USERSYNC_PRUNE"]
 
 # Run a managed Hub service that reconciles users/groups from users.json
 c.JupyterHub.services = [
@@ -64,5 +65,20 @@ c.JupyterHub.tornado_settings = {
     "slow_spawn_timeout": 60,
 }
 
+datasets_volume = os.environ.get("DATASETS_VOLUME", "jupyter_hub_test_datasets-vol")
+datasets_mount  = os.environ.get("DATASETS_MOUNT_PATH", "/shared/data")
+COURSE_DIR      = os.environ.get("COURSE_DIR", "/home/jovyan/work/NewYorkTaxi")
 
+current_vols = getattr(c.DockerSpawner, "volumes", {}) or {}
+current_vols.update({
+    datasets_volume: {"bind": datasets_mount, "mode": "ro"},
+})
+c.DockerSpawner.volumes = current_vols
 
+async def _post_spawn_hook(spawner, auth_state):
+    cmd = f"bash -lc 'mkdir -p {COURSE_DIR} && ln -sfn {datasets_mount} {COURSE_DIR}/data'"
+    try:
+        await spawner.run_command(cmd, timeout=20)
+        spawner.log.info("Symlink de datasets creado correctamente.")
+    except Exception as e:
+        spawner.log.warning(f"No se pudo crear symlink de datasets: {e}")

@@ -1,7 +1,7 @@
 import os
 
-def split_csv(env, default=""):
-    return [x.strip() for x in os.environ.get(env, default).split(",") if x.strip()]
+def split_csv(env):
+    return [x.strip() for x in os.environ[env].split(",") if x.strip()]
 
 
 # Define scopes for roles
@@ -19,11 +19,8 @@ def configure_users_and_roles(c):
     subadmin_users = split_csv("JUPYTERHUB_SUBADMIN_USERS")
     allowed_users_env = split_csv("JUPYTERHUB_ALLOWED_USERS")
 
-    BOOTSTRAP_FLAG = os.environ.get(
-        "JUPYTERHUB_SIGNUP_BOOTSTRAP_FLAG",
-        "/srv/jupyterhub/.signup_bootstrap_done"
-    )
-
+    BOOTSTRAP_FLAG = os.environ["JUPYTERHUB_SIGNUP_BOOTSTRAP_FLAG"]
+    
     first_bootstrap = not os.path.exists(BOOTSTRAP_FLAG)
     if first_bootstrap:
         try:
@@ -33,7 +30,7 @@ def configure_users_and_roles(c):
         except Exception as e:
             print(f"[bootstrap] can't create flag {BOOTSTRAP_FLAG}: {e}")
 
-    env_open = os.environ.get("JUPYTERHUB_OPEN_SIGNUP", "false").lower() == "true"
+    env_open = os.environ["JUPYTERHUB_OPEN_SIGNUP"].lower() == "true"
     
     # for the users security: only allow signup on first boot unless explicitly enabled
     c.NativeAuthenticator.open_signup  = env_open or first_bootstrap

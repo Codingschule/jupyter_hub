@@ -3,9 +3,9 @@ import os, time, json, urllib.request, urllib.error, urllib.parse, hashlib, sys
 
 API_URL = os.environ["JUPYTERHUB_API_URL"].rstrip("/")   # CDI for JupyterHub
 API_TOKEN = os.environ["JUPYTERHUB_API_TOKEN"]           # CDI for JupyterHub
-USERS_FILE = os.getenv("USERS_FILE", "/srv/jupyterhub/users.json")
-INTERVAL = int(os.getenv("USERSYNC_INTERVAL", "10"))
-PRUNE = os.getenv("USERSYNC_PRUNE", "false").lower() == "true"
+USERS_FILE = os.environ["USERS_FILE"]
+INTERVAL = int(os.environ["USERSYNC_INTERVAL"])
+PRUNE = os.environ["USERSYNC_PRUNE"].lower() == "true"
 
 HDRS = {"Authorization": f"token {API_TOKEN}", "Content-Type": "application/json"}
 

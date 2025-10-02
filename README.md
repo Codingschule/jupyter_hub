@@ -38,31 +38,78 @@ cp .env.dummy .env
 
 2. Edit the `.env` file and adjust the following values:
 ```
-JUPYTERHUB_VERSION=5.1.0
-JUPYTERHUB_PORT=8000                           # Hub external port
-DOCKER_JUPYTER_IMAGE=my-datascience-singleuser:5.1.0  # Single-user image tag
+# =============================================================================
+# JUPYTERHUB KONFIGURATION
+# =============================================================================
 
-JUPYTERHUB_NETWORK=hub-backend                 # Docker network name used by compose
+# --- Grundlegende JupyterHub-Einstellungen ---
+JUPYTERHUB_VERSION=5.1.0                     # Festgelegte Hub-Version, um unerwartete Änderungen zu vermeiden
+JUPYTERHUB_PORT=8111                         # Port, an dem der Hub öffentlich zugänglich ist
+PYTHONPATH=/srv/jupyterhub                   # Python-Pfad für JupyterHub
 
-POSTGRES_DB=jupyterhub                         # PostgreSQL database name
-POSTGRES_USER=jupyteruser                      # PostgreSQL user
-POSTGRES_PASSWORD=jupyterhubpass               # PostgreSQL password
-DB_HOST=postgres                               # PostgreSQL service hostname (compose)
-DB_PORT=5432                                   # PostgreSQL port
+# --- Docker-Konfiguration ---
+DOCKER_JUPYTER_IMAGE=my-datascience-singleuser:5.1.0  # Standard Single-User Notebook Image für DockerSpawner
+JUPYTERHUB_EXT_NETWORK=hub-public                     # Vorher erstelltes Docker-Netzwerk für öffentlichen Hub-Zugriff
+JUPYTERHUB_NETWORK=hub-backend                        # Internes Docker-Netzwerk für Spawner und Services
 
-JUPYTERHUB_AUTO_APPROVE=false                  # Do not auto-approve unknown signups
-JUPYTERHUB_OPEN_SIGNUP=false                   # Signup closed unless first boot flag
+# --- Datenbank-Konfiguration ---
+POSTGRES_DB=jupyterhub                       # Datenbankname für Hub-Status
+POSTGRES_USER=jupyteruser                    # Datenbankbenutzer für Hub-Verbindungen
+POSTGRES_PASSWORD=userpassword               # Passwort für den DB-Benutzer
+DB_HOST=postgres                             # Hostname des PostgreSQL-Dienstes
+DB_PORT=5432                                 # PostgreSQL-Port im internen Netzwerk
 
-JUPYTERHUB_ADMIN_USERS=admin,techmanager       # Comma-separated list of admin users
-JUPYTERHUB_ALLOWED_USERS=admin,techmanager     # Allowed users whitelist
-JUPYTERHUB_SUBADMIN_USERS=techmanager          # Limited management role
+# --- Benutzerverwaltung ---
+JUPYTERHUB_AUTO_APPROVE=false                # Automatische Genehmigung von Anmeldungen deaktiviert
+JUPYTERHUB_ADMIN_USERS=admin,techmanager     # Administratoren mit vollen Hub-Rechten
+JUPYTERHUB_ALLOWED_USERS=admin,techmanager   # Beschränkung der Anmeldung auf diese E-Mails (plus Tools-Ergänzungen)
+JUPYTERHUB_SUBADMIN_USERS=techmanager        # Benutzer mit "user-admin"-Rolle (ohne volle Admin-Rechte)
 
-USERS_FILE=/path.../users.json                 # Source file for user/group sync
-USERSYNC_INTERVAL=5                            # Seconds between sync checks
-USERSYNC_PRUNE=false                           # Do not remove extras during sync
+# --- Benutzersynchronisierung ---
+USERS_FILE=/srv/jupyterhub/users.json        # Pfad für externe Benutzer/Gruppen
+USERSYNC_INTERVAL=10                         # Sekunden zwischen Prüfungen auf users.json-Änderungen
+USERSYNC_PRUNE=false                         # Benutzer, die nicht in users.json sind, nicht bei Sync entfernen
 
-EDIT_LOGIN_PASSWORD=somePassword
-EDIT_TARGET_URL=/path/editUser.html
+# --- Anmeldung und Registrierung ---
+JUPYTERHUB_SIGNUP_BOOTSTRAP_FLAG=/srv/jupyterhub/.signup_bootstrap_done
+JUPYTERHUB_OPEN_SIGNUP=false                 # Öffentliche Registrierung geschlossen (außer beim ersten Start)
+EDIT_LOGIN_PASSWORD=pas12345                 # Client-seitiges Passwort für den statischen Editor-Zugang
+EDIT_TARGET_URL=/hub/static/edit/editUser.html  # Zielseite für JSON-Editor nach Client-Login
+
+# =============================================================================
+# INHALTE UND KURSE
+# =============================================================================
+
+# --- New York Taxi Beispiel ---
+COURSE_DIR=/home/jovyan/work/NewYorkTaxi     # Verzeichnis für den New York Taxi Kurs
+
+# --- Git-Integration ---
+NBGITPULLER_REPO=https://github.com/Codingschule/NewYorkTaxi.git
+NBGITPULLER_BRANCH=main
+NBGITPULLER_TARGET=workbooks
+
+# --- Benutzereinstellungen ---
+NB_USER=jovyan                               # Standard-Benutzername
+NB_UID=1000                                  # Benutzer-ID
+NB_GID=100                                   # Gruppen-ID
+
+# =============================================================================
+# RUNNER-KONFIGURATION
+# =============================================================================
+
+RUNNER_ENABLED=1                             # Runner aktiviert (1=ja, 0=nein)
+RUNNER_WATCH_DIR=${COURSE_DIR}               # Zu überwachendes Verzeichnis
+RUNNER_CONFIG=${COURSE_DIR}/runner.yml       # Konfigurationsdatei für den Runner
+RUNNER_OUTDIR=/home/jovyan/work/.runner      # Ausgabeverzeichnis des Runners
+RUNNER_TEMPLATE=python                       # Template-Typ für den Runner
+
+# =============================================================================
+# DATASETS-KONFIGURATION
+# =============================================================================
+
+DATASETS_DIR=/shared/data                    # Verzeichnis für Datasets
+DATASETS_VOLUME=jupyter_hub_test_datasets-vol # Name des Docker-Volumes für Datasets
+DATASETS_MOUNT_PATH=/shared/data             # Mountpunkt für Datasets im Container
 ```
 
 ### 3. Build and Start Containers

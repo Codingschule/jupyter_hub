@@ -1,4 +1,7 @@
 .env
+.DS_Store
+.idea
+
 jupyterhub_config/jupyterhub-proxy.pid
 jupyterhub_config/users.json
 jupyterhub_config/.signup_bootstrap_done

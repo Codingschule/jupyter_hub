@@ -34,7 +34,7 @@ def apply_spawner(c):
     
     # Increase shared memory for heavy notebooks   
     c.DockerSpawner.extra_host_config = {
-        "shm_size": "1g",
+        "shm_size": "4g",
         "dns": ["1.1.1.1", "8.8.8.8"]  
     }
     # Run notebook containers as root to avoid permission issues with volume mounts

@@ -56,7 +56,7 @@ def apply_spawner(c):
         'COURSE_DIR': os.environ["COURSE_DIR"],
     }
     # Basic resource limits
-    c.DockerSpawner.mem_limit="4G"
+    c.DockerSpawner.mem_limit="8G"
     
     c.DockerSpawner.cpu_limit=2
 
